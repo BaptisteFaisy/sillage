@@ -92,20 +92,20 @@ def make_fiche(**changes: object) -> Fiche:
 
 class TestSuccessRate:
     def test_five_successes_without_failure(self) -> None:
-        assert success_rate(successes=5, failures=0) == 1.0
+        assert success_rate(successes=5, failures=0) == 6 / 7
 
     def test_no_feedback_at_all_is_neutral(self) -> None:
         assert success_rate(0, 0) == 0.5
         assert success_rate() == NEUTRAL_RATE
 
     def test_one_success_one_failure(self) -> None:
-        assert success_rate(1, 1) == 2 / 3
+        assert success_rate(1, 1) == 0.5
 
     def test_two_successes_one_failure(self) -> None:
-        assert success_rate(2, 1) == 3 / 4
+        assert success_rate(2, 1) == 3 / 5
 
     def test_only_failures(self) -> None:
-        assert success_rate(0, 2) == 1 / 3
+        assert success_rate(0, 2) == 1 / 4
 
     def test_negative_counts_are_ignored(self) -> None:
         assert success_rate(-3, -4) == NEUTRAL_RATE
@@ -113,7 +113,7 @@ class TestSuccessRate:
     def test_a_usage_without_feedback_does_not_enter_the_rate(self) -> None:
         """EF-RET-05: the rate is built from the feedbacks only."""
         fiche = make_fiche(success_count=2, failure_count=1, no_feedback_count=7)
-        assert success_rate(successes=fiche.success_count, failures=fiche.failure_count) == 3 / 4
+        assert success_rate(successes=fiche.success_count, failures=fiche.failure_count) == 3 / 5
 
 
 class TestFreshness:
@@ -155,7 +155,7 @@ class TestStale:
 class TestServed:
     def test_a_served_fiche_carries_its_rate_and_its_freshness(self) -> None:
         result = served(make_fiche(), NOW)
-        assert result.success_rate == 1.0
+        assert result.success_rate == 6 / 7
         assert result.freshness_days == 10
         assert result.level_code == LEVEL_CODE[Level.VALIDATED]
 
@@ -247,7 +247,7 @@ class TestCatalogueMetrics:
     def test_the_average_rate_covers_only_the_fiches_with_feedback(self) -> None:
         """f-5 has no feedback at all: it is counted apart, never averaged in."""
         metrics = catalogue_metrics(self.make_catalog(), NOW)
-        assert metrics["success_rate"] == round((1.0 + 2 / 3 + 1.0 + 1 / 3) / 4, 4)
+        assert metrics["success_rate"] == round((6 / 7 + 0.5 + 5 / 6 + 0.25) / 4, 4)
 
     def test_freshness_is_reported(self) -> None:
         metrics = catalogue_metrics(self.make_catalog(), NOW)

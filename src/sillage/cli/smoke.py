@@ -81,7 +81,7 @@ def check_catalog() -> str:
     scoring = _need("sillage.catalog.scoring")
     levels = _need("sillage.catalog.levels")
     rate = scoring.success_rate(successes=5, failures=0)
-    assert abs(rate - 1.0) < 1e-9, rate
+    assert abs(rate - 6 / 7) < 1e-9, rate  # (s+1)/(s+f+2), spécification 13.5
     assert abs(scoring.success_rate(0, 0) - 0.5) < 1e-9
     assert levels.next_level_after_successes(level="validated", successes=3, authors=2) == "proven"
     assert levels.should_set_aside(consecutive_failures=2) is True
