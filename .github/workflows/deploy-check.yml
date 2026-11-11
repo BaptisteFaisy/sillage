@@ -1,0 +1,54 @@
+name: deploy-check
+
+# Hors du chemin des PR volontairement (budget CI 5 min) : `cdk synth` a besoin
+# de node et boto3, que le worker de PR n'installe pas. Tourne après un merge
+# sur main, et à la demande.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/**"
+      - "src/sillage/**"
+      - ".github/workflows/deploy-check.yml"
+  workflow_dispatch: {}
+  schedule:
+    - cron: "20 3 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-check-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PYTHONPATH: src
+
+jobs:
+  synth:
+    name: cdk-synth
+    runs-on: ${{ fromJSON(vars.CI_RUNNER || '["self-hosted","sillage-worker"]') }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Optional dependencies
+        run: |
+          python3 -m pip install --quiet --user boto3 pyyaml || echo "deps skipped"
+      - name: Asset bundle
+        run: |
+          if python3 -m sillage.cli assets --help >/dev/null 2>&1; then
+            python3 -m sillage.cli assets --out infra/quicksight-assets --check
+          else
+            echo "commande assets pas encore livree : bundle non verifie"
+          fi
+      - name: CDK synth (skipped when node or the stacks are missing)
+        run: |
+          if command -v node >/dev/null 2>&1 && [ -f infra/cdk/app.py ]; then
+            cd infra/cdk && python3 -m pip install --quiet --user -r requirements.txt && python3 app.py
+          else
+            echo "node ou stacks absents : synth reporte (voir docs/RUNBOOK.md)"
+          fi

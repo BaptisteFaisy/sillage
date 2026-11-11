@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sillage"
+version = "0.1.0"
+description = "Sillage — one shared memory for engineers, developers and AI agents (Amazon Bedrock AgentCore)"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+dependencies = []
+
+[project.optional-dependencies]
+api = ["fastapi>=0.110", "uvicorn>=0.27"]
+aws = ["boto3>=1.34"]
+agents = ["strands-agents>=1.0"]
+assets = ["PyYAML>=6.0"]
+dev = ["pytest>=8.0", "pytest-cov>=4.1", "ruff>=0.5"]
+
+[project.scripts]
+sillage = "sillage.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+pythonpath = ["src"]
+markers = [
+    "integration: end to end on generated data (still offline)",
+    "recette: acceptance scenario R1..R22 of the specification",
+    "slow: kept out of the default PR run",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+src = ["src", "tests", "data", "infra", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RET", "ARG", "RUF"]
+ignore = ["ARG002", "ARG004", "RUF012", "SIM108", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "ARG001", "ARG002", "ARG004", "ARG005", "SLF001", "PLC0415"]
+"data/generator/**" = ["RUF001"]
+"src/sillage/cli/smoke.py" = ["S101", "BLE001", "PLC0415"]
+
+[tool.coverage.run]
+source = ["src/sillage"]
+omit = ["*/tests/*"]

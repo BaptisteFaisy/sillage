@@ -1,0 +1,70 @@
+name: ci
+
+# CI budget: 5 minutes max per job (user rule 2026-10-24). One job, one
+# worker, no network dependency: every test runs offline against fakes.
+# Native/E2E work (CDK synth, AWS deploy) lives in `deploy-check.yml`,
+# which never runs on a pull request.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONPATH: src
+
+jobs:
+  ci:
+    name: ci
+    runs-on: ${{ fromJSON(vars.CI_RUNNER || '["self-hosted","sillage-worker"]') }}
+    timeout-minutes: 5
+    steps:
+      - name: Checkout (shallow)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Tooling (ruff, pytest)
+        run: |
+          # The self-hosted workers already ship them; a GitHub-hosted runner
+          # needs them installed (kept optional so an offline worker still runs).
+          python3 -m pip install --quiet --upgrade pip 2>/dev/null || true
+          python3 -m pip install --quiet ruff pytest fastapi httpx pydantic 2>/dev/null \
+            || python3 -m pip install --quiet --user --break-system-packages \
+                 ruff pytest fastapi httpx pydantic 2>/dev/null \
+            || echo "installation skipped: the worker already has the tools"
+
+      - name: Lint (ruff)
+        run: |
+          python3 -m ruff --version
+          PATHS=""
+          for d in src tests data infra scripts; do
+            [ -d "$d" ] && PATHS="$PATHS $d"
+          done
+          python3 -m ruff check $PATHS
+          python3 -m ruff format --check $PATHS
+
+      - name: Size guard (< 500 lines / < 50 per function)
+        run: python3 scripts/check_limits.py
+
+      - name: Tests
+        run: python3 -m pytest -m "not slow" --maxfail=20
+
+      - name: Gardes de l'agent de conflits (stdlib, hors ligne)
+        run: |
+          cd .github/inferhub
+          python3 test_conflict_agent.py
+          python3 test_quota.py
+          python3 test_union_journal.py
+
+      - name: Demo smoke (generated data, offline)
+        run: python3 -m sillage.cli smoke

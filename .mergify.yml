@@ -1,0 +1,39 @@
+# File de merge Mergify — Sillage (AWS MSP AI Hackathon, Track 1).
+#
+# Conditions de file :
+#   - `ci` (ruff + limites 500/50 + pytest offline + smoke annexe D)
+#   - `ci-budget` (budget 5 min par job, règle user 2026-10-24)
+# La gate hermes-lite reste en dry-run (variable HERMES_LITE_DRY_RUN=1) :
+# Mergify est le seul pilote de merge.
+
+queue_rules:
+  - name: default
+    queue_conditions:
+      - check-success = ci
+      - check-success = ci-budget
+      - -conflict
+      - -draft
+      - base = main
+    batch_size:
+      min: 1
+      max: 3
+    batch_max_wait_time: "30 seconds"
+    max_checks_retries: 1
+    merge_method: rebase
+    update_method: rebase
+
+priority_rules:
+  - name: urgent
+    conditions:
+      - label = urgent
+    priority: high
+  - name: priority-low
+    conditions:
+      - label = priority-low
+    priority: low
+
+merge_queue:
+  max_parallel_checks: 4
+
+merge_protections_settings:
+  auto_merge_conditions: true

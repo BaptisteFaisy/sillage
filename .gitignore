@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+.venv/
+venv/
+
+# Test and lint caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Generated demo data (rebuild with `make synth`)
+data/generated/
+
+# Local state
+*.sqlite3
+*.db
+.sillage/
+out/
+cdk.out/
+
+# Node (portal tooling, if any)
+node_modules/
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Never commit a credential, even a demo one
+.env
+*.pem
+*-key.txt
+secrets.*
