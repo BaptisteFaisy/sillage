@@ -16,7 +16,7 @@ the two stores cannot drift apart.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from sillage.catalog.local_state import latest_per_fiche
 from sillage.kernel.types import Episode, Feedback, Fiche, Lesson, Scope, Trace, Usage
@@ -43,7 +43,7 @@ class CascadePlan:
     fiches: frozenset[str] = frozenset()
     usages: frozenset[str] = frozenset()
     retours: tuple[Feedback, ...] = ()
-    flagged: tuple[Fiche, ...] = field(default=())
+    flagged: tuple[Fiche, ...] = ()
 
     def report(self) -> dict[str, int]:
         """Counts of the deletion, one key per family, zeros included."""
