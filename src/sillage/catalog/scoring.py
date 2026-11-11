@@ -24,30 +24,21 @@ NEUTRAL_RATE = 0.5
 
 
 def success_rate(successes: int = 0, failures: int = 0) -> float:
-    """Success rate of a fiche, from its feedbacks only.
+    """Success rate of a fiche, from its feedbacks only (specification 13.5).
 
-    A fiche with no feedback at all gets the neutral ``0.5``: no proof, no
-    disproof. As soon as one feedback exists, the rate is smoothed by one
-    virtual success, so a single confirmation does not read as a certainty and
-    a perfect record still reads ``1.0``.
+    The formula is the one of the specification: ``(successes + 1) /
+    (successes + failures + 2)``. It reads ``0.5`` when there is no feedback at
+    all (no proof, no disproof), ``2/3`` after a single confirmation, and
+    ``6/7`` for five successes without a failure: a rate of ``1.0`` would
+    claim a certainty that usage cannot give.
 
     Usages without feedback never enter the rate (EF-RET-05): they are counted
     apart in ``Fiche.no_feedback_count`` and only ``successes`` and
     ``failures`` are used here.
-
-    Note on the formula: the comment of CONTRACT.md 4 mentions ``(s+1)/(s+f+2)``,
-    which reads ``0.857`` for five successes and no failure. The smoke of this
-    repository (``cli/smoke.py``, not editable from here) asserts ``1.0`` for
-    that case and ``0.5`` without any feedback, so the smoothing keeps one
-    virtual success on both sides of the fraction. The property the
-    specification asks for is preserved: the rate is computed by code, starts
-    neutral and never reaches certainty from a single confirmation.
     """
     ok = max(0, int(successes))
     ko = max(0, int(failures))
-    if ok + ko == 0:
-        return NEUTRAL_RATE
-    return (ok + 1) / (ok + ko + 1)
+    return (ok + 1) / (ok + ko + 2)
 
 
 def freshness_days(fiche: Fiche, now: datetime) -> int | None:
