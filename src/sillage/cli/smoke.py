@@ -54,8 +54,8 @@ def check_capture() -> str:
     service = capture.build_default_service()
     trace = sample.ticket_2041()
     ingested = service.ingest_trace(trace)
-    assert ingested.events, "aucun evenement normalise"
-    assert ingested.redacted_secrets >= 0
+    assert ingested.trace.events, "aucun evenement normalise"
+    assert ingested.events_created, "la trace n'a pas ete rejouee en evenements"
     again = service.ingest_trace(trace)
     assert again.duplicate, "EF-CAP-11 : la meme trace doit etre ignoree"
     events, secrets = len(ingested.trace.events), ingested.redacted_secrets
