@@ -36,7 +36,7 @@ env:
 jobs:
   gate:
     name: Verdict
-    runs-on: ${{ fromJSON(vars.CI_RUNNER || '["self-hosted","sillage-worker"]') }}
+    runs-on: ${{ fromJSON(vars.CI_RUNNER || '["ubuntu-latest"]') }}
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4

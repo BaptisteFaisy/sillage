@@ -17,7 +17,7 @@ concurrency:
 jobs:
   alert:
     name: Lister les PR en conflit
-    runs-on: ${{ fromJSON(vars.CI_RUNNER || '["self-hosted","sillage-worker"]') }}
+    runs-on: ${{ fromJSON(vars.CI_RUNNER || '["ubuntu-latest"]') }}
     timeout-minutes: 5
     steps:
       - name: Rapport
